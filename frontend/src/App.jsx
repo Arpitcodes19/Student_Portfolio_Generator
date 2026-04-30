@@ -24,7 +24,7 @@ function App() {
       
       if (token) {
         try {
-          const response = await fetch('http://localhost:5000/api/portfolio/me', {
+          const response = await fetch('${process.env.REACT_APP_API_URL}/api/portfolio/me', {
             method: 'GET',
             headers: { 'x-auth-token': token }
           });
@@ -70,7 +70,7 @@ function App() {
     }
 
     try {
-      const response = await fetch('http://localhost:5000/api/portfolio', {
+      const response = await fetch('${process.env.REACT_APP_API_URL}/api/portfolio', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
