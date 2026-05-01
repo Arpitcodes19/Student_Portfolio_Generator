@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { Mail, Lock, User, ArrowRight, Sparkles, Sun, Moon, Loader2 } from 'lucide-react';
 
-// Naya prop 'toggleDarkMode' add kiya gaya hai
 const Auth = ({ onAuthSuccess, isDarkMode, toggleDarkMode }) => {
   const [isLogin, setIsLogin] = useState(true);
   const [loading, setLoading] = useState(false);
@@ -13,9 +12,12 @@ const Auth = ({ onAuthSuccess, isDarkMode, toggleDarkMode }) => {
     password: ''
   });
 
+  // 1. API URL ko decide karein (Render link from .env)
+  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
-    setErrorMsg(''); // Type karte waqt error message hide kar do
+    setErrorMsg(''); 
   };
 
   const handleSubmit = async (e) => {
@@ -23,9 +25,9 @@ const Auth = ({ onAuthSuccess, isDarkMode, toggleDarkMode }) => {
     setLoading(true);
     setErrorMsg('');
 
-    // Backend URL decide karein based on Login or Signup
+    // 2. URL ko dynamic banayein
     const endpoint = isLogin ? '/api/auth/login' : '/api/auth/signup';
-    const url = `http://localhost:5000${endpoint}`;
+    const url = `${API_URL}${endpoint}`;
 
     try {
       const response = await fetch(url, {
@@ -39,22 +41,20 @@ const Auth = ({ onAuthSuccess, isDarkMode, toggleDarkMode }) => {
       const data = await response.json();
 
       if (!response.ok) {
-        // Agar backend se koi error aaye (jaise wrong password ya email exists)
         throw new Error(data.message || 'Something went wrong');
       }
 
-      // 🏆 Success! Token ko browser ke localStorage mein save karein
       localStorage.setItem('token', data.token);
       localStorage.setItem('userName', data.name);
       
-      console.log(data.message); // "Logged in successfully!" etc.
-      
-      // App ko aage badhayein (Phase 1 par bhejein)
       onAuthSuccess();
 
     } catch (error) {
       console.error('Auth error:', error);
-      setErrorMsg(error.message);
+      // Agar backend band ho ya link galat ho toh "Failed to fetch" yahan handle hoga
+      setErrorMsg(error.message === 'Failed to fetch' 
+        ? 'Cannot connect to server. Please try again later.' 
+        : error.message);
     } finally {
       setLoading(false);
     }
@@ -67,10 +67,8 @@ const Auth = ({ onAuthSuccess, isDarkMode, toggleDarkMode }) => {
   };
 
   return (
-    // Main container
     <div className={`min-h-screen flex items-center justify-center p-4 relative overflow-hidden transition-colors duration-500 ${isDarkMode ? 'bg-[#09090b] text-slate-200' : 'bg-slate-50 text-slate-800'}`}>
       
-      {/* Theme Toggle Button (Top Right Corner) */}
       <button
         onClick={toggleDarkMode}
         className={`absolute top-6 right-6 p-3 rounded-full backdrop-blur-md border transition-all duration-300 z-50 shadow-lg ${
@@ -83,11 +81,9 @@ const Auth = ({ onAuthSuccess, isDarkMode, toggleDarkMode }) => {
         {isDarkMode ? <Sun size={22} /> : <Moon size={22} />}
       </button>
 
-      {/* Background Decorative Elements */}
       <div className={`absolute top-[-10%] left-[-10%] w-96 h-96 rounded-full blur-3xl pointer-events-none transition-colors duration-500 ${isDarkMode ? 'bg-indigo-600/20' : 'bg-indigo-300/40'}`}></div>
       <div className={`absolute bottom-[-10%] right-[-10%] w-96 h-96 rounded-full blur-3xl pointer-events-none transition-colors duration-500 ${isDarkMode ? 'bg-fuchsia-600/20' : 'bg-fuchsia-300/40'}`}></div>
 
-      {/* Auth Card */}
       <div className={`w-full max-w-md rounded-3xl p-8 shadow-2xl relative z-10 transition-all duration-500 ${
         isDarkMode 
         ? 'bg-white/5 border border-white/10 backdrop-blur-xl' 
@@ -108,7 +104,6 @@ const Auth = ({ onAuthSuccess, isDarkMode, toggleDarkMode }) => {
           </p>
         </div>
 
-        {/* Error Message Alert */}
         {errorMsg && (
           <div className="mb-6 p-3 bg-red-500/10 border border-red-500/50 rounded-lg text-red-500 text-sm text-center font-medium">
             {errorMsg}
@@ -116,8 +111,6 @@ const Auth = ({ onAuthSuccess, isDarkMode, toggleDarkMode }) => {
         )}
 
         <form onSubmit={handleSubmit} className="space-y-5">
-          
-          {/* Name Field (Only for Registration) */}
           {!isLogin && (
             <div className="space-y-1.5 animate-in fade-in slide-in-from-top-4 duration-500">
               <label className={`text-sm font-medium ml-1 ${isDarkMode ? 'text-slate-300' : 'text-slate-700'}`}>Full Name</label>
@@ -142,7 +135,6 @@ const Auth = ({ onAuthSuccess, isDarkMode, toggleDarkMode }) => {
             </div>
           )}
 
-          {/* Email Field */}
           <div className="space-y-1.5">
             <label className={`text-sm font-medium ml-1 ${isDarkMode ? 'text-slate-300' : 'text-slate-700'}`}>Email Address</label>
             <div className="relative">
@@ -165,7 +157,6 @@ const Auth = ({ onAuthSuccess, isDarkMode, toggleDarkMode }) => {
             </div>
           </div>
 
-          {/* Password Field */}
           <div className="space-y-1.5">
             <div className="flex justify-between items-center ml-1">
               <label className={`text-sm font-medium ${isDarkMode ? 'text-slate-300' : 'text-slate-700'}`}>Password</label>
@@ -191,7 +182,6 @@ const Auth = ({ onAuthSuccess, isDarkMode, toggleDarkMode }) => {
             </div>
           </div>
 
-          {/* Submit Button */}
           <button 
             type="submit" 
             disabled={loading}
@@ -208,7 +198,6 @@ const Auth = ({ onAuthSuccess, isDarkMode, toggleDarkMode }) => {
           </button>
         </form>
 
-        {/* Toggle Login/Register */}
         <div className={`mt-8 text-center text-sm ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
           {isLogin ? "Don't have an account? " : "Already have an account? "}
           <button 
