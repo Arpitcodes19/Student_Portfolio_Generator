@@ -3,18 +3,41 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 require('dotenv').config();
 
-// Routes import kar rahe hain
+// Routes import
 const authRoutes = require('./routes/auth'); 
 const portfolioRoutes = require('./routes/portfolio');
 
 const app = express();
 
-// Middlewares
+// ✅ CORS FIX: Allowing main domain and all Vercel previews
+const allowedOrigins = [
+  "https://student-portfolio-generator.vercel.app", // Main production link (No trailing slash)
+  "http://localhost:5173",                         // Local development
+  /\.vercel\.app$/                                 // Regex to allow all Vercel git/preview links
+];
+
 app.use(cors({
-  origin: ["https://student-portfolio-generator.vercel.app/", "http://localhost:5173"], 
+  origin: function (origin, callback) {
+    // Allow requests with no origin (like mobile apps or curl)
+    if (!origin) return callback(null, true);
+    
+    const isAllowed = allowedOrigins.some((allowed) => {
+      if (allowed instanceof RegExp) return allowed.test(origin);
+      return allowed === origin;
+    });
+
+    if (isAllowed) {
+      callback(null, true);
+    } else {
+      console.log("CORS blocked this origin:", origin);
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   methods: ["GET", "POST", "PUT", "DELETE"],
-  credentials: true
+  credentials: true,
+  allowedHeaders: ["Content-Type", "Authorization"]
 }));
+
 app.use(express.json());
 
 // MongoDB Connection
@@ -22,9 +45,10 @@ mongoose.connect(process.env.MONGO_URI)
   .then(() => console.log('✅ MongoDB Connected Successfully'))
   .catch((err) => console.log('❌ MongoDB Connection Error: ', err));
 
-// API Routes yahan define karein
-app.use('/api/auth', authRoutes); // Ab /api/auth par saari login/signup requests jayengi
+// API Routes
+app.use('/api/auth', authRoutes);
 app.use('/api/portfolio', portfolioRoutes);
+
 // Basic Test Route
 app.get('/', (req, res) => {
   res.send('Portfolio Builder Backend is Running! 🚀');
