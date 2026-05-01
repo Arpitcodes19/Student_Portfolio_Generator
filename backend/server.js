@@ -10,7 +10,11 @@ const portfolioRoutes = require('./routes/portfolio');
 const app = express();
 
 // Middlewares
-app.use(cors());
+app.use(cors({
+  origin: ["https://student-portfolio-generator.vercel.app/", "http://localhost:5173"], 
+  methods: ["GET", "POST", "PUT", "DELETE"],
+  credentials: true
+}));
 app.use(express.json());
 
 // MongoDB Connection
